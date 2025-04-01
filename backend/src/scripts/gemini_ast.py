@@ -30,7 +30,7 @@ TEMP_FOLDER = os.path.join(BASE_DIR, "temp_extracted")
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-ALLOWED_EXTENSIONS = {".py", ".java", ".js", ".php", ".cpp"}
+ALLOWED_EXTENSIONS = {".py", ".java", ".js", ".php", ".cpp", ".dart"}
 
 def extract_zip(zip_path):
     logging.info(f"Extracting ZIP: {zip_path}")
@@ -86,6 +86,26 @@ def extract_cpp_functions(file_path):
         return re.findall(pattern, code, re.DOTALL)
     except Exception as e:
         logging.error(f"Error parsing C++ file {file_path}: {e}")
+        return []
+
+def extract_php_functions(file_path):
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            code = f.read()
+        pattern = r"function\s+(\w+)\s*\(.*?\)"
+        return re.findall(pattern, code)
+    except Exception as e:
+        logging.error(f"Error parsing PHP file {file_path}: {e}")
+        return []
+
+def extract_dart_functions(file_path):
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            code = f.read()
+        pattern = r"[\w<>]+\s+\w+\s*\([^)]*\)\s*\{"
+        return re.findall(pattern, code)
+    except Exception as e:
+        logging.error(f"Error parsing Dart file {file_path}: {e}")
         return []
 
 async def analyze_code_async(session, functions, filename):
@@ -154,6 +174,10 @@ async def process_files(zip_name, file_paths):
                         extracted_functions = extract_java_functions(file_path)
                     elif ext == ".cpp":
                         extracted_functions = extract_cpp_functions(file_path)
+                    elif ext == ".php":
+                        extracted_functions = extract_php_functions(file_path)
+                    elif ext == ".dart":
+                        extracted_functions = extract_dart_functions(file_path)
                 except Exception as e:
                     logging.error(f"Skipping file {file_path} due to extraction error: {e}")
                     return
